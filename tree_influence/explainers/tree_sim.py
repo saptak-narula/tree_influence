@@ -36,7 +36,7 @@ class TreeSim(Explainer):
                 'fow': Weighted feature output; like 'fo' but replaces leaf 1s with 1 / leaf values.
             logger: object, If not None, output to logger.
         """
-        assert measure in ['dot_prod', 'cosine', 'euclidean']
+        assert measure in ['dot_prod1', 'cosine', 'euclidean']
         assert kernel in ['to_', 'lp_', 'lpw', 'lo_', 'low', 'fp_', 'fpw', 'fo_', 'fow']
         self.measure = measure
         self.kernel = kernel
