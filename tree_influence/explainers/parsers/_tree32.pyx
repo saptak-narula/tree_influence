@@ -204,39 +204,46 @@ cdef class _Tree32:
         """
         Return 2d vector of leaf one-hot encodings, shape=(X.shape[0], no. leaves).
         """
-
+    
         # In / out
         cdef SIZE_t        n_samples = X.shape[0]
-        cdef SIZE_t        n_leaves = self.leaf_count_
+        #cdef SIZE_t        n_leaves = self.leaf_count_
+        cdef SIZE_t        n_leaves = 2
         cdef DTYPE_t[:, :] out = np.zeros((n_samples, n_leaves), dtype=np_dtype_t)
         cdef DTYPE_t       val = 1.0
-
+        cdef SIZE_t        node_ctr = 0
+    
         # Incrementers
         cdef SIZE_t i = 0
         cdef Node*  node = NULL
-
+    
         with nogil:
-
+    
             for i in range(n_samples):
                 node = self.root_
-
+                node_ctr = 0
+    
                 while not node.is_leaf:
                     if self._test_threshold(X[i, node.feature], node.threshold):
                         node = node.left_child
+                        node_ctr = 2*node_ctr+1
                     else:
                         node = node.right_child
-
+                        node_ctr = 2*node_ctr+2
+    
                 val = 1.0
-
+    
                 if output:
                     val = node.leaf_val
-
+    
                 if weighted:
                     val /= node.count
-
-                out[i][node.leaf_id] = val
-
+    
+                out[i][0] = node_ctr
+                out[i][1] = val
+    
         return np.asarray(out)
+
 
     cpdef np.ndarray feature_path(self, DTYPE_t[:, :] X, bint output, bint weighted):
         """
