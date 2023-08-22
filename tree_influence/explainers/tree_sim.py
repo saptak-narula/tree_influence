@@ -82,7 +82,7 @@ class TreeSim(Explainer):
         for test_idx in range(X.shape[0]):
     
             # compute similarity to the test example
-            if self.measure == 'dot_prod':
+            if self.measure == 'dot_prod1':
                 #sim = np.dot(self.X_train_, X_test_[test_idx])  # shape=(no. train,)
                 sim = np.dot(np.equal(self.X_train_[:,:,0], X_test_[test_idx,:,0]), X_test_[test_idx,:,1])  # shape=(no. train,)
     
