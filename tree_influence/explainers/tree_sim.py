@@ -63,54 +63,54 @@ class TreeSim(Explainer):
 
         return self
 
-def get_local_influence(self, X, y):
-    """
-    Input
-        X: 2d array of test data.
-        y: 2d array of test targets.
-
-    Return
-        - 2d array of shape=(no. train, X.shape[0]).
-            * Array is returned in the same order as the training data.
-    """
-    X, y = util.check_data(X, y, objective=self.model_.objective)
-
-    X_test_ = self._kernel_transform(X)  # shape=(X.shape[0], no. feature)
-
-    influence = np.zeros((self.X_train_.shape[0], X_test_.shape[0]), dtype=util.dtype_t)
-
-    for test_idx in range(X.shape[0]):
-
-        # compute similarity to the test example
-        if self.measure == 'dot_prod':
-            #sim = np.dot(self.X_train_, X_test_[test_idx])  # shape=(no. train,)
-            sim = np.dot(np.equal(self.X_train_[:,:,0], X_test_[test_idx,:,0]), X_test_[test_idx,:,1])  # shape=(no. train,)
-
-        elif self.measure == 'cosine':
-            normalizer = (norm(self.X_train_, axis=1) * norm(X_test_[test_idx]))
-            sim = np.dot(self.X_train_, X_test_[test_idx]) / normalizer  # shape=(no. train,)
-
-        else:
-            assert self.measure == 'euclidean'
-            with np.errstate(divide='ignore'):
-                sim = 1.0 / norm(self.X_train_ - X_test_[test_idx], axis=1)  # shape=(no. train,)
-                sim = np.nan_to_num(sim)  # value is inf. for any examples the same as training
-
-        # determine if each train example helps or hurts test loss
-        if self.objective_ in ['binary', 'multiclass']:
-            sgn = np.where(self.y_train_ == y[test_idx], 1.0, -1.0)  # shape=(no. train,)
-
-        else:  # if train and test targets both on same side of the prediction, then pos. influence
-            assert self.objective_ == 'regression'
-            pred = self.original_model_.predict(X[[test_idx]])
-            test_sgn = 1.0 if pred >= y[test_idx] else -1.0
-            train_sgn = np.where(self.y_train_ >= pred, 1.0, -1.0)  # shape=(no. train,)
-            sgn = np.where(train_sgn != test_sgn, 1.0, -1.0)
-
-        # compute influence
-        influence[:, test_idx] = sim * sgn
-
-    return influence
+    def get_local_influence(self, X, y):
+        """
+        Input
+            X: 2d array of test data.
+            y: 2d array of test targets.
+    
+        Return
+            - 2d array of shape=(no. train, X.shape[0]).
+                * Array is returned in the same order as the training data.
+        """
+        X, y = util.check_data(X, y, objective=self.model_.objective)
+    
+        X_test_ = self._kernel_transform(X)  # shape=(X.shape[0], no. feature)
+    
+        influence = np.zeros((self.X_train_.shape[0], X_test_.shape[0]), dtype=util.dtype_t)
+    
+        for test_idx in range(X.shape[0]):
+    
+            # compute similarity to the test example
+            if self.measure == 'dot_prod':
+                #sim = np.dot(self.X_train_, X_test_[test_idx])  # shape=(no. train,)
+                sim = np.dot(np.equal(self.X_train_[:,:,0], X_test_[test_idx,:,0]), X_test_[test_idx,:,1])  # shape=(no. train,)
+    
+            elif self.measure == 'cosine':
+                normalizer = (norm(self.X_train_, axis=1) * norm(X_test_[test_idx]))
+                sim = np.dot(self.X_train_, X_test_[test_idx]) / normalizer  # shape=(no. train,)
+    
+            else:
+                assert self.measure == 'euclidean'
+                with np.errstate(divide='ignore'):
+                    sim = 1.0 / norm(self.X_train_ - X_test_[test_idx], axis=1)  # shape=(no. train,)
+                    sim = np.nan_to_num(sim)  # value is inf. for any examples the same as training
+    
+            # determine if each train example helps or hurts test loss
+            if self.objective_ in ['binary', 'multiclass']:
+                sgn = np.where(self.y_train_ == y[test_idx], 1.0, -1.0)  # shape=(no. train,)
+    
+            else:  # if train and test targets both on same side of the prediction, then pos. influence
+                assert self.objective_ == 'regression'
+                pred = self.original_model_.predict(X[[test_idx]])
+                test_sgn = 1.0 if pred >= y[test_idx] else -1.0
+                train_sgn = np.where(self.y_train_ >= pred, 1.0, -1.0)  # shape=(no. train,)
+                sgn = np.where(train_sgn != test_sgn, 1.0, -1.0)
+    
+            # compute influence
+            influence[:, test_idx] = sim * sgn
+    
+        return influence
 
     # private
     def _kernel_transform(self, X):
@@ -156,34 +156,34 @@ def get_local_influence(self, X, y):
 
         return X_
 
-def _leaf_kernel_transform(self, X, output='path', weight='unweighted'):
-    """
-    - Transform each x in X to be a vector of one-hot encoded leaf paths.
-    - The `output` and `weight` parameters control the value of the 1s.
-
-    Return
-        - Regression and binary: 2d array of shape=(no. train, total no. leaves).
-        - Multiclass: 2d array of shape=(no. train, ~total no. leaves * no. class).
-    """
-    trees = self.model_.trees.flatten()
-    #total_n_leaves = np.sum([tree.leaf_count_ for tree in trees])
-    num_trees = len(trees)
-
-    #X_ = np.zeros((X.shape[0], total_n_leaves))
-    X_ = np.zeros((X.shape[0], num_trees, 2))
-
-    output = True if output == 'output' else False
-    weighted = True if weight == 'weighted' else False
-
-    #n_prev_leaves = 0
-    #for tree in trees:
-    for ctr, tree in enumerate(trees):
-        #start = n_prev_leaves
-        #stop = n_prev_leaves + tree.leaf_count_
-        #X_[:, start: stop] = tree.leaf_path(X, output=output, weighted=weighted)
-        #n_prev_leaves += tree.leaf_count_
-        X_[:,ctr,:] = tree.leaf_path(X, output=output, weighted=weighted)
-    return X_
+    def _leaf_kernel_transform(self, X, output='path', weight='unweighted'):
+        """
+        - Transform each x in X to be a vector of one-hot encoded leaf paths.
+        - The `output` and `weight` parameters control the value of the 1s.
+    
+        Return
+            - Regression and binary: 2d array of shape=(no. train, total no. leaves).
+            - Multiclass: 2d array of shape=(no. train, ~total no. leaves * no. class).
+        """
+        trees = self.model_.trees.flatten()
+        #total_n_leaves = np.sum([tree.leaf_count_ for tree in trees])
+        num_trees = len(trees)
+    
+        #X_ = np.zeros((X.shape[0], total_n_leaves))
+        X_ = np.zeros((X.shape[0], num_trees, 2))
+    
+        output = True if output == 'output' else False
+        weighted = True if weight == 'weighted' else False
+    
+        #n_prev_leaves = 0
+        #for tree in trees:
+        for ctr, tree in enumerate(trees):
+            #start = n_prev_leaves
+            #stop = n_prev_leaves + tree.leaf_count_
+            #X_[:, start: stop] = tree.leaf_path(X, output=output, weighted=weighted)
+            #n_prev_leaves += tree.leaf_count_
+            X_[:,ctr,:] = tree.leaf_path(X, output=output, weighted=weighted)
+        return X_
 
     def _feature_kernel_transform(self, X, output='path', weight='unweighted'):
         """
