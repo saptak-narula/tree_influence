@@ -78,39 +78,45 @@ class TreeSim(Explainer):
         X_test_ = self._kernel_transform(X)  # shape=(X.shape[0], no. feature)
     
         influence = np.zeros((self.X_train_.shape[0], X_test_.shape[0]), dtype=util.dtype_t)
-    
-        for test_idx in range(X.shape[0]):
+
+        if ((self.measure == 'dot_prod1') & (self.objective_ in ['binary', 'multiclass'])):
+            for test_idx in range(X.shape[0]):
+                sim = np.dot(np.equal(self.X_train_[:,:,0], X_test_[test_idx,:,0]), X_test_[test_idx,:,1])
+                sgn = np.equal(self.y_train_, y[test_idx])*2.0 - 1.0
+                influence[:, test_idx] = sim * sgn
+        return influence
+#        for test_idx in range(X.shape[0]):
     
             # compute similarity to the test example
-            if self.measure == 'dot_prod1':
+#            if self.measure == 'dot_prod1':
                 #sim = np.dot(self.X_train_, X_test_[test_idx])  # shape=(no. train,)
-                sim = np.dot(np.equal(self.X_train_[:,:,0], X_test_[test_idx,:,0]), X_test_[test_idx,:,1])  # shape=(no. train,)
+#                sim = np.dot(np.equal(self.X_train_[:,:,0], X_test_[test_idx,:,0]), X_test_[test_idx,:,1])  # shape=(no. train,)
     
-            elif self.measure == 'cosine':
-                normalizer = (norm(self.X_train_, axis=1) * norm(X_test_[test_idx]))
-                sim = np.dot(self.X_train_, X_test_[test_idx]) / normalizer  # shape=(no. train,)
+#            elif self.measure == 'cosine':
+#                normalizer = (norm(self.X_train_, axis=1) * norm(X_test_[test_idx]))
+#                sim = np.dot(self.X_train_, X_test_[test_idx]) / normalizer  # shape=(no. train,)
     
-            else:
-                assert self.measure == 'euclidean'
-                with np.errstate(divide='ignore'):
-                    sim = 1.0 / norm(self.X_train_ - X_test_[test_idx], axis=1)  # shape=(no. train,)
-                    sim = np.nan_to_num(sim)  # value is inf. for any examples the same as training
+#            else:
+#                assert self.measure == 'euclidean'
+#                with np.errstate(divide='ignore'):
+#                    sim = 1.0 / norm(self.X_train_ - X_test_[test_idx], axis=1)  # shape=(no. train,)
+#                    sim = np.nan_to_num(sim)  # value is inf. for any examples the same as training
     
             # determine if each train example helps or hurts test loss
-            if self.objective_ in ['binary', 'multiclass']:
-                sgn = np.where(self.y_train_ == y[test_idx], 1.0, -1.0)  # shape=(no. train,)
+#            if self.objective_ in ['binary', 'multiclass']:
+#                sgn = np.where(self.y_train_ == y[test_idx], 1.0, -1.0)  # shape=(no. train,)
     
-            else:  # if train and test targets both on same side of the prediction, then pos. influence
-                assert self.objective_ == 'regression'
-                pred = self.original_model_.predict(X[[test_idx]])
-                test_sgn = 1.0 if pred >= y[test_idx] else -1.0
-                train_sgn = np.where(self.y_train_ >= pred, 1.0, -1.0)  # shape=(no. train,)
-                sgn = np.where(train_sgn != test_sgn, 1.0, -1.0)
+#            else:  # if train and test targets both on same side of the prediction, then pos. influence
+#                assert self.objective_ == 'regression'
+#                pred = self.original_model_.predict(X[[test_idx]])
+#                test_sgn = 1.0 if pred >= y[test_idx] else -1.0
+#                train_sgn = np.where(self.y_train_ >= pred, 1.0, -1.0)  # shape=(no. train,)
+#                sgn = np.where(train_sgn != test_sgn, 1.0, -1.0)
     
             # compute influence
-            influence[:, test_idx] = sim * sgn
+#            influence[:, test_idx] = sim * sgn
     
-        return influence
+#        return influence
 
     # private
     def _kernel_transform(self, X):
