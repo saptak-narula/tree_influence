@@ -80,10 +80,15 @@ class TreeSim(Explainer):
         influence = np.zeros((self.X_train_.shape[0], X_test_.shape[0]), dtype=util.dtype_t)
 
         if ((self.measure == 'dot_prod1') & (self.objective_ in ['binary', 'multiclass'])):
-            for test_idx in range(X.shape[0]):
+            def loop_func (test_idx):
                 sim = np.dot(np.equal(self.X_train_[:,:,0], X_test_[test_idx,:,0]), X_test_[test_idx,:,1])
                 sgn = np.equal(self.y_train_, y[test_idx])*2.0 - 1.0
-                influence[:, test_idx] = sim * sgn
+                return(sim*sgn)
+#            for test_idx in range(X.shape[0]):
+#                sim = np.dot(np.equal(self.X_train_[:,:,0], X_test_[test_idx,:,0]), X_test_[test_idx,:,1])
+#                sgn = np.equal(self.y_train_, y[test_idx])*2.0 - 1.0
+#                influence[:, test_idx] = sim * sgn
+            influence = np.array(list(map(loop_func, range(X.shape[0])))).reshape((self.X_train_.shape[0],-1))
         return influence
 #        for test_idx in range(X.shape[0]):
     
