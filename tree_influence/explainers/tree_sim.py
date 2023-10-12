@@ -89,9 +89,12 @@ class TreeSim(Explainer):
 #                sgn = np.equal(self.y_train_, y[test_idx])*2.0 - 1.0
 #                influence[:, test_idx] = sim * sgn
 #            influence = np.array(list(map(loop_func, range(X.shape[0])))).reshape((self.X_train_.shape[0],-1))
-            train_tensor = np.transpose(self.X_train_[:,:,0],(0,2,1))
-            test_tensor = np.transpose(X_test_[:,:,0],(2,0,1))
-            test_wt_tensor = np.transpose(X_test_[:,:,1],(2,0,1))
+#            train_tensor = np.transpose(self.X_train_[:,:,0],(0,2,1))
+#            test_tensor = np.transpose(X_test_[:,:,0],(2,0,1))
+#            test_wt_tensor = np.transpose(X_test_[:,:,1],(2,0,1))
+            train_tensor = self.X_train_[:,:,0][:,None,:]
+            test_tensor = X_test_[:,:,0][None,:,:]
+            test_wt_tensor = X_test_[:,:,1][None,:,:]
             eq_tensor = np.equal(train_tensor, test_tensor)
             influence = np.multiply(eq_tensor, test_wt_tensor).sum(-1)
         return influence
