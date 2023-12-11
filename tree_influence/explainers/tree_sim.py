@@ -97,12 +97,17 @@ class TreeSim(Explainer):
         top_ctrs_X_test_leafs = np.take_along_axis(X_test_[:,:,0], top_ctrs_X_test_trees, axis=-1) # returns array of shape (# test samples, 100)
 
         for test_ctr in range(X_test_.shape[0]):
-            train_elems = set()
+            #train_elems = set()
+            train_elems = []
             for a, b in zip(top_ctrs_X_test_trees[test_ctr], top_ctrs_X_test_leafs[test_ctr]):
-                train_elems.update(train_point_dict.get((a,b)))
-            sim = np.dot(np.equal(self.X_train_[list(train_elems),:,0], X_test_[test_ctr,:,0]), X_test_[test_ctr,:,1])
-            sgn = np.equal(self.y_train_[list(train_elems)], y[test_ctr])*2.0 - 1.0
-            influence[list(train_elems), test_ctr] = sim * sgn
+                train_elems.extend(train_point_dict.get((a,b)))
+            train_elems = list(set(train_elems))
+            sim = np.dot(np.equal(self.X_train_[train_elems,:,0], X_test_[test_ctr,:,0]), X_test_[test_ctr,:,1])
+            sgn = np.equal(self.y_train_[train_elems], y[test_ctr])*2.0 - 1.0
+            influence[train_elems, test_ctr] = sim * sgn
+            #sim = np.dot(np.equal(self.X_train_[list(train_elems),:,0], X_test_[test_ctr,:,0]), X_test_[test_ctr,:,1])
+            #sgn = np.equal(self.y_train_[list(train_elems)], y[test_ctr])*2.0 - 1.0
+            #influence[list(train_elems), test_ctr] = sim * sgn
         
         return influence
 
