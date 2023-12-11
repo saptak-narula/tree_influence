@@ -102,7 +102,7 @@ class TreeSim(Explainer):
                 train_elems.update(train_point_dict.get((a,b)))
             sim = np.dot(np.equal(self.X_train_[list(train_elems),:,0], X_test_[test_ctr,:,0]), X_test_[test_ctr,:,1])
             sgn = np.equal(self.y_train_[list(train_elems)], y[test_ctr])*2.0 - 1.0
-            influence[:, test_idx] = sim * sgn
+            influence[:, test_ctr] = sim * sgn
         
         return influence
 
