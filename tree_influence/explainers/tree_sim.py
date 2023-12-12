@@ -111,11 +111,13 @@ class TreeSim(Explainer):
                 #sim = np.dot(np.equal(self.X_train_[train_elems,:,0], X_test_[test_ctr,:,0]), X_test_[test_ctr,:,1])
                 #sgn = np.equal(self.y_train_[train_elems], y[test_ctr])*2.0 - 1.0
                 #influence[train_elems, test_ctr] = sim * sgn
+            run_simy_loop()
+            def compute_simy():
                 sim = np.dot(np.equal(self.X_train_[list(train_elems),:,0], X_test_[test_ctr,:,0]), X_test_[test_ctr,:,1])
                 sgn = np.equal(self.y_train_[list(train_elems)], y[test_ctr])*2.0 - 1.0
                 influence[list(train_elems), test_ctr] = sim * sgn
-            run_simy_loop()
-        
+            compute_simy()
+       
         return influence
 
         # --------------------------------------------- PHASE 1 CHANGE BELOW
