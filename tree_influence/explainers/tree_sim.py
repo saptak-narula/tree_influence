@@ -83,7 +83,8 @@ class TreeSim(Explainer):
         influence = np.zeros((self.X_train_.shape[0], X_test_.shape[0]), dtype=util.dtype_t)
         
         # --------------------------------------------- PHASE 2 NEW BELOW
-        top_ctrs_X_train_trees = np.argpartition(self.X_train_[:,:,1], kth=50, axis=-1) # returns array of shape (# train samples, 100)
+        n_elem = 100
+        top_ctrs_X_train_trees = np.argpartition(self.X_train_[:,:,1], kth=n_elem, axis=-1)[:,:n_elem] # returns array of shape (# train samples, 100)
         top_ctrs_X_train_leafs = np.take_along_axis(self.X_train_[:,:,0], top_ctrs_X_train_trees, axis=-1) # returns array of shape (# train samples, 100)
 
         # INITIAILIZE ARRAY OF SIZE NUM_TREES, MAX NUM_LEAF_NODES, 3 -> 3 FOR 
@@ -96,7 +97,7 @@ class TreeSim(Explainer):
 
         create_train_ds()
         
-        top_ctrs_X_test_trees = np.argpartition(X_test_[:,:,1], kth=100, axis=-1) # returns array of shape (# test samples, 100)
+        top_ctrs_X_test_trees = np.argpartition(X_test_[:,:,1], kth=n_elem, axis=-1)[:,:n_elem] # returns array of shape (# test samples, 100)
         top_ctrs_X_test_leafs = np.take_along_axis(X_test_[:,:,0], top_ctrs_X_test_trees, axis=-1) # returns array of shape (# test samples, 100)
 
         for test_ctr in range(X_test_.shape[0]):
